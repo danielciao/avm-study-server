@@ -15,7 +15,7 @@ class S3DataReader:
         self.s3 = session.client('s3')
         self.bucket_name = bucket_name
 
-    def load_file(self, name, type):
+    def load_file(self, name, type, load=None):
         with utils.Timer() as t:
             t.log(f'Loading {name}.{type} from S3')
 
@@ -25,14 +25,17 @@ class S3DataReader:
             file_data = file_obj['Body'].read()
             file_buffer = BytesIO(file_data)
 
-            if type == 'csv':
-                df = pd.read_csv(
-                    file_buffer, encoding='ISO-8859-1', low_memory=False
-                )
-            elif type == 'parquet':
-                df = pd.read_parquet(file_buffer)
+            if load:
+                df = load(file_buffer)
             else:
-                raise ValueError(f"Unsupported file type: {type}")
+                if type == 'csv':
+                    df = pd.read_csv(
+                        file_buffer, encoding='ISO-8859-1', low_memory=False
+                    )
+                elif type == 'parquet':
+                    df = pd.read_parquet(file_buffer)
+                else:
+                    raise ValueError(f"Unsupported file type: {type}")
 
             t.log(f'Loaded {len(df)} rows')
 
