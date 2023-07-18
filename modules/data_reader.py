@@ -32,6 +32,8 @@ class S3DataReader:
                     df = pd.read_csv(
                         file_buffer, encoding='ISO-8859-1', low_memory=False
                     )
+                elif type == 'xlsx':
+                    df = pd.read_excel(file_buffer)
                 elif type == 'parquet':
                     df = pd.read_parquet(file_buffer)
                 else:

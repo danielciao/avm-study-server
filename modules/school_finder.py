@@ -1,4 +1,3 @@
-import modules.utils as utils
 import numpy as np
 import pandas as pd
 from sklearn.neighbors import BallTree
@@ -68,16 +67,13 @@ class SchoolFinder:
     @staticmethod
     def __enrich_school_data(df, uprn_df):
         # left join SCH and UPRN dataset
-        df = pd.merge(df.reset_index(), uprn_df, how='left',
-                      left_on='SCH_UPRN', right_on='UPRN')
+        location_df = uprn_df[['UPRN_LATITUDE', 'UPRN_LONGITUDE']]
+        df = df.merge(location_df, how='left',
+                      left_on='SCH_UPRN', right_index=True)
 
         # Drop records that have not been matched - they are not in London
-        print('Matching rate:', utils.format_ratio(
-            len(df[df['UPRN_LATITUDE'].notna()]), len(df.index)))
-
+        print('Matched school count:', len(df[df['UPRN_LATITUDE'].notna()]))
         df = df[df['UPRN_LATITUDE'].notna()]
-
-        df.set_index('SCH_URN', inplace=True)
 
         return df
 

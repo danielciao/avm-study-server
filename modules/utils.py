@@ -1,5 +1,11 @@
 import time
 
+import numpy as np
+
+
+def safe_div(x, y):
+    return x / y if y != 0 else np.nan
+
 
 def format_ratio(dividend, divisor):
     return '%.4f' % (dividend * 100 / divisor) + '%'
