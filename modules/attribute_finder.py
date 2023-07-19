@@ -1,3 +1,5 @@
+import modules.utils as utils
+import pandas as pd
 from modules.data_reader import S3DataReader
 from modules.epc_finder import EPCFinder
 from modules.greenspace_finder import GreenSpaceFinder
@@ -16,13 +18,19 @@ class LocationAttributeFinder:
             aws_secret_access_key='OZm77TrduSDAgp8Yrxec+p4Dhj523m8YIggSYhl5',
         )
 
-        onsud_uprn_df = self.reader.load_file('london_onsud_uprn', 'parquet')
+        with utils.Timer() as t:
+            t.log(f'Initialising attribute finders')
 
-        self.epc_finder = EPCFinder(self.reader, onsud_uprn_df)
-        self.transport_finder = TransportFinder(self.reader)
-        self.school_finder = SchoolFinder(self.reader, onsud_uprn_df)
-        self.space_finder = GreenSpaceFinder(self.reader, onsud_uprn_df)
-        self.imd_finder = IMDFinder(self.reader, onsud_uprn_df)
+            onsud_uprn_df = self.reader.load_file(
+                'london_onsud_uprn', 'parquet')
+
+            self.epc_finder = EPCFinder(self.reader, onsud_uprn_df)
+            self.transport_finder = TransportFinder(self.reader)
+            self.school_finder = SchoolFinder(self.reader, onsud_uprn_df)
+            self.space_finder = GreenSpaceFinder(self.reader, onsud_uprn_df)
+            self.imd_finder = IMDFinder(self.reader, onsud_uprn_df)
+
+            t.log(f'All attribute finders initialised!')
 
     def get_load_status(self):
         return {
@@ -47,3 +55,23 @@ class LocationAttributeFinder:
 
     def find_imd(self, lat, lon, top_n):
         return self.imd_finder.get_closest_matches(central_point=(lat, lon), top_n=top_n).to_json(orient='records')
+
+    def find_all(self, lat, lon, radius):
+        transport = self.transport_finder.get_stop_counts(
+            central_point=(lat, lon), radius=radius)
+        school = self.school_finder.get_school_counts(
+            central_point=(lat, lon), radius=radius)
+        green_space = self.space_finder.get_closest_matches(
+            central_point=(lat, lon), top_n=1)
+        imd = self.imd_finder.get_closest_matches(
+            central_point=(lat, lon), top_n=1)
+
+        df = pd.concat([
+            transport.reset_index(drop=True),
+            school.reset_index(drop=True),
+            green_space.reset_index(drop=True),
+            imd.reset_index(drop=True)
+        ], axis=1)
+        df = df.loc[:, ~df.columns.duplicated(keep='last')]  # type: ignore
+
+        return df.to_json(orient='records')

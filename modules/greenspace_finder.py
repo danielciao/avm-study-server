@@ -58,13 +58,19 @@ class GreenSpaceFinder:
             private_space_df, how='left', left_on='CPO_MSOA', right_index=True)
         enriched_df = enriched_df.merge(
             green_space_df, how='left', left_on='CPO_LSOA', right_index=True)
+        enriched_df.drop(columns=['CPO_LSOA', 'CPO_MSOA'], inplace=True)
         return enriched_df
 
     def get_closest_matches(self, central_point, top_n=5):
-        # Query the KDTree for the top_n closest points
+        # Start by querying for the top_n points
         distances, indices = self.tree.query([central_point], k=top_n)
 
-        # Get the closest points in the DataFrame
+        # If there are ties at the end of the list, query for more points
+        while top_n > 1 and distances[0][-1] == distances[0][-2]:
+            top_n += 1
+            distances, indices = self.tree.query([central_point], k=top_n)
+
+         # Get the closest points in the DataFrame
         match = self.df.iloc[indices[0]]
 
         # If the result is a Series, convert it to a DataFrame

@@ -252,5 +252,45 @@ def imd():
     return finder.find_imd(lat=lat, lon=lon, top_n=top_n)
 
 
+@app.route('/features', methods=['GET'])
+def features():
+    """
+    Get All Features
+    ---
+    tags:
+      - All
+    parameters:
+      - name: lat
+        in: query
+        type: number
+        required: true
+        description: The latitude
+      - name: lon
+        in: query
+        type: number
+        required: true
+        description: The longitude
+      - name: radius
+        in: query
+        type: integer
+        required: false
+        description: The radius  
+    responses:
+      200:
+        description: Returns all features for a given latitude and longitude
+      500:
+        description: Invalid parameters
+    """
+    lat = request.args.get('lat', type=float)
+    lon = request.args.get('lon', type=float)
+    radius = request.args.get('radius', type=int) or 804
+
+    # Check if values are valid
+    if lat is None or lon is None:
+        return jsonify({'error': 'Invalid parameters'}), 500
+
+    return finder.find_all(lat=lat, lon=lon, radius=radius)
+
+
 if __name__ == "__main__":
     app.run()
