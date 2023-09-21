@@ -30,8 +30,11 @@ class EPCFinder(KDTreeFinder):
                                .rename(columns={'EPC_INSPECTION_DATE': 'EPC_FIRST_INSPECTION_DATE'})
                                .set_index('EPC_UPRN'))
 
-        # Add first inspection date
-        df = df.merge(df_first_inspection, how='left',
-                      left_on='EPC_UPRN', right_index=True)
+        # Drop duplicates and keep the latest record but also keep the first
+        # inspection date, which could be used to infer the age of the property
+        # later
+        df = df.sort_values(by='EPC_INSPECTION_DATE').drop_duplicates(
+            'EPC_UPRN', keep='last').merge(df_first_inspection, how='left',
+                                           left_on='EPC_UPRN', right_index=True)
 
         return df
