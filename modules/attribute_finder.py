@@ -10,13 +10,7 @@ from modules.transport_finder import TransportFinder
 
 class LocationAttributeFinder:
     def __init__(self):
-        # Load and prepare all the necessary data
-        self.reader = S3DataReader(
-            bucket_name='avm-area-data',
-            region_name='eu-west-2',
-            aws_access_key_id='AKIAWJUUQTPWZZXZRLE6',
-            aws_secret_access_key='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',
-        )
+        self.reader = S3DataReader()
 
         with utils.Timer() as t:
             t.log(f'Initialising attribute finders')

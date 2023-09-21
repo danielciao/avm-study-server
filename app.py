@@ -1,13 +1,21 @@
-import os
 import time
 
+import pandas as pd
+from dotenv import load_dotenv
 from flasgger import Swagger
 from flask import Flask, jsonify, request
+from flask_cors import CORS
 from modules.attribute_finder import LocationAttributeFinder
+from modules.model import Model
+
+load_dotenv()
 
 app = Flask(__name__)
+CORS(app)
+
 swagger = Swagger(app)
 finder = LocationAttributeFinder()
+model = Model()
 
 
 @app.route('/')
@@ -21,7 +29,7 @@ def index():
       200:
         description: Returns a simple hello world message
     """
-    return 'Hello, World!'
+    return 'iPredict API is running!'
 
 
 @app.route('/ping')
@@ -290,6 +298,36 @@ def features():
         return jsonify({'error': 'Invalid parameters'}), 500
 
     return finder.find_all(lat=lat, lon=lon, radius=radius)
+
+
+@app.route('/predict', methods=['POST'])
+def predict():
+    """
+    Predict house prices
+    ---
+    tags:
+      - Prediction
+    parameters:
+      - in: body
+        name: payload
+        required: true
+        schema:
+          type: object
+          properties:
+            EPC_TOTAL_FLOOR_AREA:
+              type: number
+    responses:
+      200:
+        description: Returns the prediction
+    """
+    try:
+        data = pd.DataFrame([request.json])
+        [prediction] = model.predict(data).tolist()
+
+        return jsonify({"prediction": prediction}), 200
+
+    except Exception as e:
+        return jsonify({"error": str(e)}), 400
 
 
 if __name__ == "__main__":

@@ -1,7 +1,5 @@
 import time
 
-import numpy as np
-
 
 def format_ratio(dividend, divisor):
     return '%.4f' % (dividend * 100 / divisor) + '%'

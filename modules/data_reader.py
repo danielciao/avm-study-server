@@ -1,3 +1,4 @@
+import os
 from io import BytesIO
 
 import boto3
@@ -6,14 +7,14 @@ import pandas as pd
 
 
 class S3DataReader:
-    def __init__(self, bucket_name, region_name, aws_access_key_id, aws_secret_access_key):
+    def __init__(self):
         session = boto3.Session(
-            aws_access_key_id=aws_access_key_id,
-            aws_secret_access_key=aws_secret_access_key,
-            region_name=region_name
+            aws_access_key_id=os.environ.get("AWS_ACCESS_KEY_ID"),
+            aws_secret_access_key=os.environ.get("AWS_SECRET_ACCESS_KEY"),
+            region_name='eu-west-2'
         )
         self.s3 = session.client('s3')
-        self.bucket_name = bucket_name
+        self.bucket_name = 'avm-area-data'
 
     def load_file(self, name, type, load=None):
         with utils.Timer() as t:
