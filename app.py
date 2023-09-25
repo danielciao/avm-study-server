@@ -10,12 +10,12 @@ from modules.model import Model
 
 load_dotenv()
 
-app = Flask(__name__)
-CORS(app)
-
-swagger = Swagger(app)
-finder = LocationAttributeFinder()
 model = Model()
+finder = LocationAttributeFinder()
+
+app = Flask(__name__)
+swagger = Swagger(app)
+CORS(app)
 
 
 @app.route('/')
@@ -321,8 +321,13 @@ def predict():
         description: Returns the prediction
     """
     try:
-        data = pd.DataFrame([request.json])
-        [prediction] = model.predict(data).tolist()
+        df = pd.DataFrame([request.json])
+
+        if 'PPD_TransferDate' in df.columns:
+            df['PPD_TransferDate'] = pd.to_datetime(
+                df['PPD_TransferDate'], unit='ms')
+
+        [prediction] = model.predict(df).tolist()
 
         return jsonify({"prediction": prediction}), 200
 

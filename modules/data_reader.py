@@ -1,5 +1,5 @@
 import os
-from io import BytesIO
+from tempfile import NamedTemporaryFile
 
 import boto3
 import modules.utils as utils
@@ -20,25 +20,33 @@ class S3DataReader:
         with utils.Timer() as t:
             t.log(f'Loading {name}.{type} from S3')
 
-            file_obj = self.s3.get_object(
-                Bucket=self.bucket_name, Key=f'{name}.{type}'
-            )
-            file_data = file_obj['Body'].read()
-            file_buffer = BytesIO(file_data)
+            with NamedTemporaryFile(delete=False) as temp_file:
+                file_path = temp_file.name
+                t.log(f'Temporary file created at {file_path}')
 
-            if load:
-                df = load(file_buffer)
-            else:
-                if type == 'csv':
-                    df = pd.read_csv(
-                        file_buffer, encoding='ISO-8859-1', low_memory=False
-                    )
-                elif type == 'xlsx':
-                    df = pd.read_excel(file_buffer)
-                elif type == 'parquet':
-                    df = pd.read_parquet(file_buffer)
-                else:
-                    raise ValueError(f"Unsupported file type: {type}")
+                self.s3.download_fileobj(
+                    self.bucket_name, f'{name}.{type}', temp_file)
+
+                try:
+                    with open(file_path, 'rb') as file_buffer:
+                        if load:
+                            df = load(file_buffer)
+                        else:
+                            if type == 'csv':
+                                df = pd.read_csv(
+                                    file_buffer, encoding='ISO-8859-1', low_memory=False
+                                )
+                            elif type == 'xlsx':
+                                df = pd.read_excel(file_buffer)
+                            elif type == 'parquet':
+                                df = pd.read_parquet(file_buffer)
+                            else:
+                                raise ValueError(
+                                    f"Unsupported file type: {type}")
+
+                finally:
+                    if os.path.exists(file_path):
+                        os.remove(file_path)
 
             t.log(f'Loaded {len(df)} rows')
 

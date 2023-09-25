@@ -99,18 +99,18 @@ class SchoolFinder:
             central_point, radius)
 
         conditions = {
-            'SCH_NearbyAcademies': all_nearby_schools['SCH_MINORGROUP'].str.lower() == 'academies',
-            'SCH_NearbyIndependentSchools': all_nearby_schools['SCH_MINORGROUP'].str.lower() == 'independent schools',
-            'SCH_NearbyNurserySchools': (all_nearby_schools['SCH_PHASE'].str.lower() == 'nursery') | (all_nearby_schools['SCH_NURSERY'].str.lower() == 'has nursery classes'),
-            'SCH_NearbyPrimarySchools': all_nearby_schools['SCH_PHASE'].str.lower().isin(['primary', 'middle deemed primary', 'all-through']),
-            'SCH_NearbySecondarySchools': all_nearby_schools['SCH_PHASE'].str.lower().isin(['secondary', 'middle deemed secondary', 'all-through']),
-            'SCH_NearbyOutstandingSchools': all_nearby_schools['SCH_OFSTEDRATING'] >= 6,
-            'SCH_NearbyGoodSchools': all_nearby_schools['SCH_OFSTEDRATING'] >= 5,
-            'SCH_NearbyInadequateSchools': all_nearby_schools['SCH_OFSTEDRATING'] <= 3,
+            'SCH_ACAD': all_nearby_schools['SCH_MINORGROUP'] == 'Academies',
+            'SCH_IND': all_nearby_schools['SCH_MINORGROUP'] == 'Independent schools',
+            'SCH_NURSERY': (all_nearby_schools['SCH_PHASE'] == 'Nursery') | (all_nearby_schools['SCH_NURSERY'] == 'Has Nursery Classes'),
+            'SCH_PRIMARY': all_nearby_schools['SCH_PHASE'].isin(['Primary', 'Middle deemed primary', 'All-through']),
+            'SCH_SECONDARY': all_nearby_schools['SCH_PHASE'].isin(['Secondary', 'Middle deemed secondary', 'All-through']),
+            'SCH_OUTSTANDING': all_nearby_schools['SCH_OFSTEDRATING'] >= 6,
+            'SCH_GOOD': all_nearby_schools['SCH_OFSTEDRATING'] >= 5,
+            'SCH_INADEQUATE': all_nearby_schools['SCH_OFSTEDRATING'] <= 3,
         }
 
         counts = {key: all_nearby_schools[cond].shape[0]
                   for key, cond in conditions.items()}
-        counts['SCH_NearbySchools'] = all_nearby_schools.shape[0]
+        counts['SCH_ALL'] = all_nearby_schools.shape[0]
 
         return pd.DataFrame(counts, index=[0])
