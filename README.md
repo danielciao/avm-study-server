@@ -1,13 +1,20 @@
 # Flask Server
 
-### Activate virtual environment
+### Setup virtual environment
 
 **Anaconda**
 
-- conda create --name avm-study python=3.9 pip
-- conda activate avm-study
+- conda create --name avm-server python=3.9 pip
+- conda install --force-reinstall -y -q --name avm-server -c conda-forge --file requirements.txt
+- conda activate avm-server
 - conda deactivate
-- conda env remove -n avm-study
+- conda env remove -n avm-server
+
+**Install dependencies individually**
+
+```bash
+pip install boto3 fastparquet flasgger flask flask-cors gunicorn joblib openpyxl pandas python-dotenv scikit-learn scipy
+```
 
 ### Start up server
 

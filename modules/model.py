@@ -4,6 +4,7 @@ from tempfile import NamedTemporaryFile
 import boto3
 import joblib as jl
 import modules.utils as utils
+import numpy as np
 
 
 class Model:
@@ -37,4 +38,26 @@ class Model:
                         os.remove(file_path)
 
     def predict(self, df):
-        return self.model.predict(df)  # type: ignore
+        try:
+            processed_df = df.copy()
+            pipeline = self.model.named_steps['pipeline']
+
+            processed_df = pipeline.named_steps['invalidvaluecleaner'].transform(
+                processed_df)
+            processed_df = pipeline.named_steps['stringcleaner'].transform(
+                processed_df)
+            processed_df = pipeline.named_steps['columntransformer'].transform(
+                processed_df)
+
+            best_fit = self.model.named_steps['extratreesregressor']
+
+            predictions = np.array([tree.predict(processed_df)
+                                   for tree in best_fit.estimators_])
+
+            return {
+                'lower_bound': np.percentile(predictions, 10),
+                'upper_bound': np.percentile(predictions, 90),
+                'prediction': self.model.predict(df).tolist()[0]
+            }
+        except Exception as e:
+            return print(e)

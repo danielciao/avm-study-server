@@ -327,9 +327,7 @@ def predict():
             df['PPD_TransferDate'] = pd.to_datetime(
                 df['PPD_TransferDate'], unit='ms')
 
-        [prediction] = model.predict(df).tolist()
-
-        return jsonify({"prediction": prediction}), 200
+        return jsonify({"prediction": model.predict(df)}), 200
 
     except Exception as e:
         return jsonify({"error": str(e)}), 400
